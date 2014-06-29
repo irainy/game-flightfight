@@ -1,7 +1,18 @@
-local function Hero(  )
+local function Hero( )
   local self = CCSprite:createWithSpriteFrameName("hero1.png")
-
+  self:setAnchorPoint(CCPoint(0.5, 0))
   -- self:setAnchorPoint(CCPoint(self:getContentSize().width / 2, self:getContentSize().height / 2))
+  local blink = CCBlink:create(1,3)
+  local heroAni = CCAnimation:create()
+  local cache  = CCSpriteFrameCache:sharedSpriteFrameCache()
+  heroAni:setDelayPerUnit(0.1)
+  heroAni:addSpriteFrame(cache:spriteFrameByName("hero1.png"))
+  heroAni:addSpriteFrame(cache:spriteFrameByName("hero2.png"))
+
+  local animate = CCAnimate:create(heroAni)
+
+  self:runAction(blink)
+  self:runAction(CCRepeatForever:create(animate))
   return self
 end
 local function backgroundMove( sh, b1, b2 )
@@ -47,33 +58,54 @@ local function GameScene (  )
   	backgroundMove(director:getWinSize().height, gameBGOne, gameBGTwo)
   end, 1)
 
-  local hero  = Hero()
 
-  hero:setPosition(CCPoint(director:getWinSize().width / 2, hero:getContentSize().height / 2))
+  -- add hero
+  local hero  = Hero()
+  hero:setPosition(CCPoint(director:getWinSize().width / 2, 0))
+
+  print("Hero height: ", hero:getContentSize().height, " Hero getPositionY: ", hero:getPositionY())
   layer:addChild(hero)
 
-
-  local blink = CCBlink:create(1,3)
-  local heroAni = CCAnimation:create()
-  local cache  = CCSpriteFrameCache:sharedSpriteFrameCache()
-  heroAni:setDelayPerUnit(0.1)
-  heroAni:addSpriteFrame(cache:spriteFrameByName("hero1.png"))
-  heroAni:addSpriteFrame(cache:spriteFrameByName("hero2.png"))
-
-  local animate = CCAnimate:create(heroAni)
-
-  hero:runAction(blink)
-  hero:runAction(CCRepeatForever:create(animate))
+  -- add bullets
+  local bulletLayer = CCLayer:create()
 
 
+  -- CCTextureCache:sharedTextureCache():addImage("my_shoot.png")
+  local texture = CCTextureCache:sharedTextureCache():textureForKey("my_shoot.png")
+  local bulletBatchNode = CCSpriteBatchNode:createWithTexture(texture)
 
+  local function AddBullet()
+    -- local bullet = CCSprite:createWithTexture(bulletBatchNode:getTexture())
+    local bullet = CCSprite:createWithSpriteFrameName("bullet1.png")
+    bullet:setAnchorPoint(CCPoint(0.5, 0))
+    bullet:setPosition(CCPoint(hero:getPositionX(), hero:getContentSize().height))
 
+    -- bulletBatchNode:addChild(bullet)
+
+    local length = director:getWinSize().height
+    local velocity=420
+    local realMoveDuration = length / velocity
+
+    local arr = CCArray:create()
+    local actionMove = CCMoveTo:create(realMoveDuration, CCPoint(hero:getPositionX(), length))
+    arr:addObject(actionMove)
+    local seq = CCSequence:create(arr)
+
+    bullet:runAction(seq)
+    bulletLayer:addChild(bullet)
+  end
+  bulletLayer:scheduleUpdateWithPriorityLua(function()
+    AddBullet()
+  end,1)
+
+  bulletLayer:addChild(bulletBatchNode)
 
 
 
 
 
   self:addChild(layer)
+  self:addChild(bulletLayer)
   -- key binding
   -- self:setKeypadEnabled(true)
   return self
