@@ -53,6 +53,19 @@ local function GameScene (  )
   layer:addChild(hero)
 
 
+  local blink = CCBlink:create(1,3)
+  local heroAni = CCAnimation:create()
+  local cache  = CCSpriteFrameCache:sharedSpriteFrameCache()
+  heroAni:setDelayPerUnit(0.1)
+  heroAni:addSpriteFrame(cache:spriteFrameByName("hero1.png"))
+  heroAni:addSpriteFrame(cache:spriteFrameByName("hero2.png"))
+
+  local animate = CCAnimate:create(heroAni)
+
+  hero:runAction(blink)
+  hero:runAction(CCRepeatForever:create(animate))
+
+
 
 
 
