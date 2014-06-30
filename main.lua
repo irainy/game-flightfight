@@ -88,15 +88,20 @@ local function GameScene (  )
 
     local arr = CCArray:create()
     local actionMove = CCMoveTo:create(realMoveDuration, CCPoint(hero:getPositionX(), length))
+    local delay = CCDelayTime:create(0.8)
     arr:addObject(actionMove)
+    arr:addObject(delay)
     local seq = CCSequence:create(arr)
 
-    bullet:runAction(seq)
     bulletLayer:addChild(bullet)
+    bullet:runAction(seq)
   end
-  bulletLayer:scheduleUpdateWithPriorityLua(function()
-    AddBullet()
-  end,1)
+
+  local scheduler = director:getScheduler()
+  scheduler:scheduleScriptFunc(AddBullet, 0.5, false) 
+  -- bulletLayer:scheduleUpdateWithPriorityLua(function()
+  --   AddBullet()
+  -- end,1)
 
   bulletLayer:addChild(bulletBatchNode)
 
