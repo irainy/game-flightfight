@@ -14,7 +14,9 @@ local function Hero( )
   local animate = CCAnimate:create(heroAni)
 
   self:runAction(blink)
-  self:runAction(CCRepeatForever:create(animate))
+  local rep = self:runAction(CCRepeatForever:create(animate))
+  rep:setTag(1)
+
 
   function isInScreen( pos )
     return pos.x - self.width / 2 > 0 and
@@ -91,9 +93,10 @@ local function BulletLayer( hero )
   end
   function self:startShoot(  )
     local scheduler = director:getScheduler()
-    scheduler:scheduleScriptFunc(function ()
+    local handler = scheduler:scheduleScriptFunc(function ()
       self:AddBullet()
     end, 0.3, false) 
+    table.insert(schedulerStack, handler)
     self:addChild(bulletBatchNode)
   end
 
@@ -129,7 +132,7 @@ local function EnemyLayer(  )
     local cache  = CCSpriteFrameCache:sharedSpriteFrameCache()
 
     local animation = CCAnimation:create()
-    animation:setDelayPerUnit(0.1)
+    animation:setDelayPerUnit(0.05)
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down1.png"))
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down2.png"))
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down3.png"))
@@ -184,9 +187,11 @@ local function EnemyLayer(  )
     self:addChild(e)
   end
   local scheduler = CCDirector:sharedDirector():getScheduler()
-  scheduler:scheduleScriptFunc(function ()
+  local handler = scheduler:scheduleScriptFunc(function ()
     self:addEnemy()
   end, 1, false) 
+
+  table.insert(schedulerStack, handler)
 
   return self
 end
@@ -289,7 +294,34 @@ local function GameScene (  )
         end
       end
       if v:boundingBox():intersectsRect(hero:boundingBox()) then
-        print("Game Over")
+        for i,v in ipairs(schedulerStack) do
+          director:getScheduler():unscheduleScriptEntry(v)
+        end
+        schedulerStack = {}
+
+        hero:stopActionByTag(1)
+
+        local arr = CCArray:create()
+
+        local cache = CCSpriteFrameCache:sharedSpriteFrameCache()
+        local animation = CCAnimation:create()
+        animation:setDelayPerUnit(0.05)
+        animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n1.png"))
+        animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n2.png"))
+        animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n3.png"))
+        animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n4.png"))
+        local animate = CCAnimate:create(animation)
+
+        local over = CCCallFunc:create(function (  )
+          director:replaceScene(GameOverScene())
+        end)
+
+        arr:addObject(animate)
+        arr:addObject(over)
+        local seq = CCSequence:create(arr)
+        hero:runAction(seq)
+        -- director:replaceScene(GameOverScene())
+        -- print("Game Over")
       end
     end
     -- print("bulletArray", #bulletLayer.bulletArray)
@@ -301,7 +333,32 @@ local function GameScene (  )
   return self
 end
 
+function GameOverScene()
+  local director = CCDirector:sharedDirector()
+  local self = CCScene:create()
+  local overLayer = CCLayer:create()
+
+  local bg = CCSprite:create("backaground.png")
+  bg:setAnchorPoint(0,0)
+
+
+  local label = CCLabelTTF:create("GAME OVER", "Marker Felt", 80);
+  label:setPosition(CCPoint(director:getWinSize().width / 2, director:getWinSize().height / 2))
+
+  -- scaleRate = director:getWinSize().width / gameBGOne:boundingBox().size.width
+  bg:setScale(scaleRate)
+  overLayer:setPosition(CCPoint(0, 0))
+
+
+  overLayer:addChild(bg)
+  overLayer:addChild(label)
+  self:addChild(overLayer)
+
+  return self
+end
 local function main ()
+
+  schedulerStack = {}
 
   local cache = CCSpriteFrameCache:sharedSpriteFrameCache()
   cache:addSpriteFramesWithFile("my_shoot.plist", "my_shoot.png")
