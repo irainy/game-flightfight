@@ -350,9 +350,15 @@ function GameOverScene()
   overLayer:setPosition(CCPoint(0, 0))
 
 
+
+  function restart(  )
+    director:replaceScene(GameScene())
+  end
   overLayer:addChild(bg)
   overLayer:addChild(label)
   self:addChild(overLayer)
+  overLayer:setTouchEnabled(true)
+  overLayer:registerScriptTouchHandler(restart)
 
   return self
 end
