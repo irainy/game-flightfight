@@ -347,8 +347,44 @@ local function GameScene (  )
   return self
 end
 
+function WelcomeScene(  )
+  local director = CCDirector:sharedDirector()
+  local layer = CCLayer:create()
+  local self = CCScene:create()
+
+  local bg = CCSprite:create("backaground.png")
+  bg:setAnchorPoint(CCPoint(0, 0))
+  bg:setPosition(CCPoint(0,0))
+
+  local label = CCLabelTTF:create("START!", "Arial", 80);
+  label:setPosition(CCPoint(director:getWinSize().width / 2, director:getWinSize().height / 2))
+
+  local highestScoreLabel = CCLabelTTF:create("HIGHEST SCORE: " .. getHighest(), "Arial", 40)
+  highestScoreLabel:setPosition(CCPoint(label:getPositionX(), label:getPositionY() - label:getContentSize().height))
+
+  scaleRate = director:getWinSize().width / bg:boundingBox().size.width
+  bg:setScale(scaleRate)
+
+
+  layer:addChild(bg)
+  layer:addChild(label)
+  layer:addChild(highestScoreLabel)
+  self:addChild(layer)
+
+  local function startGame(e, x, y)
+    if label:boundingBox():containsPoint(CCPoint(x, y)) then
+      director:replaceScene(GameScene())
+    end
+  end
+  layer:setTouchEnabled(true)
+  layer:registerScriptTouchHandler(startGame)
+  return self
+end
+
 function GameOverScene( score )
   local director = CCDirector:sharedDirector()
+
+  
   local self = CCScene:create()
   local overLayer = CCLayer:create()
 
@@ -361,6 +397,11 @@ function GameOverScene( score )
 
   local scoreLabel = CCLabelTTF:create("Your Score: " .. score, "Arial", 40)
   scoreLabel:setPosition(CCPoint(label:getPositionX(), label:getPositionY() - label:getContentSize().height))
+
+  local highestScore = getHighest()
+  if score > highestScore then
+    setHighest(score)
+  end
 
   -- scaleRate = director:getWinSize().width / gameBGOne:boundingBox().size.width
   bg:setScale(scaleRate)
@@ -381,6 +422,26 @@ function GameOverScene( score )
   return self
 end
 local function main ()
+  function hasFile(  )
+    if not CCUserDefault:sharedUserDefault():getBoolForKey("hasFile") then
+      CCUserDefault:sharedUserDefault():setBoolForKey("hasFile", true)
+      CCUserDefault:sharedUserDefault():setIntegerForKey("HighestScore", 0)
+      CCUserDefault:sharedUserDefault():flush()
+      return false
+    else
+      return true
+    end
+  end
+  function getHighest(  )
+    if hasFile() then
+      return CCUserDefault:sharedUserDefault():getIntegerForKey("HighestScore")
+    else
+      return 0
+    end
+  end
+  function setHighest( score )
+    CCUserDefault:sharedUserDefault():setIntegerForKey("HighestScore", score)
+  end
 
   schedulerStack = {}
 
@@ -388,10 +449,9 @@ local function main ()
   cache:addSpriteFramesWithFile("my_shoot.plist", "my_shoot.png")
   -- CCSpriteFrameCache:addSpriteFramesWithFile("ui/my_shoot.plist")
 	local director = CCDirector:sharedDirector()
-
-  local gameScene = GameScene()
+  -- local gameScene = GameScene()
 	director:setDisplayStats(false)
-	director:runWithScene(gameScene)
+	director:runWithScene(WelcomeScene())
 end
 
 main()
