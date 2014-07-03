@@ -232,12 +232,12 @@ local function GameScene (  )
   hero:setPosition(CCPoint(director:getWinSize().width / 2, 0))
 
 
-  -- local scoreItem = CCLabelAtlas:create("0", "numbers.png", 12, 32, 46) --CCLabelBMFont:create("0", "Arial")
-  -- local scoreItem = CCLabelAtlas:create("0", "fonts/font")
+  local score = 0
+  local scoreItem = CCLabelBMFont:create("0", "markerFelt.fnt")
   -- scoreItem:setColor(ccColor3B(143, 146, 147))
-  -- scoreItem:setAnchorPoint(CCPoint(0, 0.5))
-  -- scoreItem:setPosition(CCPoint(scoreItem:getContentSize().width / 2, director:getWinSize().height - scoreItem:getContentSize().height / 2))
-  -- heroLayer:addChild(scoreItem)
+  scoreItem:setAnchorPoint(CCPoint(0, 0.5))
+  scoreItem:setPosition(CCPoint(scoreItem:getContentSize().width / 2 + 40, director:getWinSize().height - scoreItem:getContentSize().height / 2 - 40))
+  heroLayer:addChild(scoreItem)
 
   -- print("Hero height: ", hero:getContentSize().height, " Hero getPositionY: ", hero:getPositionY())
 
@@ -300,6 +300,8 @@ local function GameScene (  )
         if v:boundingBox():intersectsRect(w:boundingBox()) then
           enemyLayer:blowUP(v)
           bulletLayer:removeBullet(w)
+          score = score + 100
+          scoreItem:setString(score)
         end
       end
       if v:boundingBox():intersectsRect(hero:boundingBox()) then
@@ -314,7 +316,7 @@ local function GameScene (  )
 
         local cache = CCSpriteFrameCache:sharedSpriteFrameCache()
         local animation = CCAnimation:create()
-        animation:setDelayPerUnit(0.05)
+        animation:setDelayPerUnit(0.1)
         animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n1.png"))
         animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n2.png"))
         animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n3.png"))
@@ -324,7 +326,7 @@ local function GameScene (  )
         local delay = CCDelayTime:create(1)
 
         local over = CCCallFunc:create(function (  )
-          director:replaceScene(GameOverScene())
+          director:replaceScene(GameOverScene( score ))
         end)
 
         arr:addObject(animate)
@@ -345,7 +347,7 @@ local function GameScene (  )
   return self
 end
 
-function GameOverScene()
+function GameOverScene( score )
   local director = CCDirector:sharedDirector()
   local self = CCScene:create()
   local overLayer = CCLayer:create()
@@ -354,14 +356,15 @@ function GameOverScene()
   bg:setAnchorPoint(0,0)
 
 
-  local label = CCLabelTTF:create("GAME OVER", "Courier", 80);
+  local label = CCLabelTTF:create("GAME OVER", "Arial", 80);
   label:setPosition(CCPoint(director:getWinSize().width / 2, director:getWinSize().height / 2))
+
+  local scoreLabel = CCLabelTTF:create("Your Score: " .. score, "Arial", 40)
+  scoreLabel:setPosition(CCPoint(label:getPositionX(), label:getPositionY() - label:getContentSize().height))
 
   -- scaleRate = director:getWinSize().width / gameBGOne:boundingBox().size.width
   bg:setScale(scaleRate)
   overLayer:setPosition(CCPoint(0, 0))
-
-
 
   function restart(e, x, y)
     if label:boundingBox():containsPoint(CCPoint(x, y)) then
@@ -370,6 +373,7 @@ function GameOverScene()
   end
   overLayer:addChild(bg)
   overLayer:addChild(label)
+  overLayer:addChild(scoreLabel)
   self:addChild(overLayer)
   overLayer:setTouchEnabled(true)
   overLayer:registerScriptTouchHandler(restart)
