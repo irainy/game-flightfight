@@ -19,8 +19,8 @@ local function Hero( )
 
 
   function isInScreen( pos )
-    return pos.x - self.width / 2 > 0 and
-            pos.x + self.width / 2 < CCDirector:sharedDirector():getWinSize().width and
+    return pos.x  > 0 and
+            pos.x  < CCDirector:sharedDirector():getWinSize().width and
             pos.y > 0 and
             pos.y + self.height < CCDirector:sharedDirector():getWinSize().height
   end
@@ -132,7 +132,7 @@ local function EnemyLayer(  )
     local cache  = CCSpriteFrameCache:sharedSpriteFrameCache()
 
     local animation = CCAnimation:create()
-    animation:setDelayPerUnit(0.05)
+    animation:setDelayPerUnit(0.1)
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down1.png"))
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down2.png"))
     animation:addSpriteFrame(cache:spriteFrameByName("enemy2_down3.png"))
@@ -173,7 +173,7 @@ local function EnemyLayer(  )
     local randX = math.random(minX, maxX)
     e:setPosition(CCPoint(randX, director:getWinSize().height))
     local arr = CCArray:create()
-    local actionMove = CCMoveTo:create(5, CCPoint(e:getPositionX(), -1*e:getContentSize().height))
+    local actionMove = CCMoveTo:create(math.random(3, 5), CCPoint(e:getPositionX(), -1*e:getContentSize().height))
     local remove = CCCallFunc:create(function (  )
       enemyMoveFinished(e)
     end)
@@ -189,7 +189,7 @@ local function EnemyLayer(  )
   local scheduler = CCDirector:sharedDirector():getScheduler()
   local handler = scheduler:scheduleScriptFunc(function ()
     self:addEnemy()
-  end, 1, false) 
+  end, 0.5, false) 
 
   table.insert(schedulerStack, handler)
 
@@ -202,8 +202,6 @@ local function GameScene (  )
 
   local bgLayer = CCLayer:create()
   bgLayer:setPosition(CCPoint(0, 0))
-
-
 
   local gameBGOne = CCSprite:create("backaground.png")
   local gameBGTwo = CCSprite:create("backaground.png")
@@ -232,6 +230,14 @@ local function GameScene (  )
   heroLayer:setPosition(CCPoint(0, 0))
   local hero  = Hero()
   hero:setPosition(CCPoint(director:getWinSize().width / 2, 0))
+
+
+  -- local scoreItem = CCLabelAtlas:create("0", "numbers.png", 12, 32, 46) --CCLabelBMFont:create("0", "Arial")
+  -- local scoreItem = CCLabelAtlas:create("0", "fonts/font")
+  -- scoreItem:setColor(ccColor3B(143, 146, 147))
+  -- scoreItem:setAnchorPoint(CCPoint(0, 0.5))
+  -- scoreItem:setPosition(CCPoint(scoreItem:getContentSize().width / 2, director:getWinSize().height - scoreItem:getContentSize().height / 2))
+  -- heroLayer:addChild(scoreItem)
 
   -- print("Hero height: ", hero:getContentSize().height, " Hero getPositionY: ", hero:getPositionY())
 
@@ -285,6 +291,9 @@ local function GameScene (  )
   self:addChild(enemyLayer)
 
 
+  local function updateScore(  )
+    -- body
+  end
   local function updateGame()
     for i,v in ipairs(enemyLayer.enemyArray) do
       for k,w in ipairs(bulletLayer.bulletArray) do
@@ -312,11 +321,14 @@ local function GameScene (  )
         animation:addSpriteFrame(cache:spriteFrameByName("hero_blowup_n4.png"))
         local animate = CCAnimate:create(animation)
 
+        local delay = CCDelayTime:create(1)
+
         local over = CCCallFunc:create(function (  )
           director:replaceScene(GameOverScene())
         end)
 
         arr:addObject(animate)
+        arr:addObject(delay)
         arr:addObject(over)
         local seq = CCSequence:create(arr)
         hero:runAction(seq)
@@ -342,7 +354,7 @@ function GameOverScene()
   bg:setAnchorPoint(0,0)
 
 
-  local label = CCLabelTTF:create("GAME OVER", "Marker Felt", 80);
+  local label = CCLabelTTF:create("GAME OVER", "Courier", 80);
   label:setPosition(CCPoint(director:getWinSize().width / 2, director:getWinSize().height / 2))
 
   -- scaleRate = director:getWinSize().width / gameBGOne:boundingBox().size.width
@@ -351,8 +363,10 @@ function GameOverScene()
 
 
 
-  function restart(  )
-    director:replaceScene(GameScene())
+  function restart(e, x, y)
+    if label:boundingBox():containsPoint(CCPoint(x, y)) then
+      director:replaceScene(GameScene())
+    end
   end
   overLayer:addChild(bg)
   overLayer:addChild(label)
