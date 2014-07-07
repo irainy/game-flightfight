@@ -241,7 +241,6 @@ local function GameScene (  )
 
   -- print("Hero height: ", hero:getContentSize().height, " Hero getPositionY: ", hero:getPositionY())
 
-
   local touchBeginPoint = nil
   local function onTouchBegan( x, y )
     touchBeginPoint = {x=x, y=y}
@@ -429,11 +428,10 @@ local function LoginScene(  )
   local eb = CCEditBox:create(CCSize(300, 100), CCScale9Sprite:create())
   eb:setFontName("fonts/font.ttf")
   eb:setFontSize(45)
-  eb:setPlaceHolder("Name:")
+  eb:setPlaceHolder("Input your Name:")
   eb:setMaxLength(8)
   eb:registerScriptEditBoxHandler(function ( e, sender )
     if e == "return" then
-      print(sender:getText())
       setUsername(sender:getText())
       director:replaceScene(WelcomeScene())
     end
@@ -446,6 +444,7 @@ local function LoginScene(  )
   return self
 end
 local function main ()
+  -- print("tolua++ test, ", RPomeloCli:test())
   function clearFile(  )
       CCUserDefault:sharedUserDefault():setBoolForKey("hasFile", false)
       CCUserDefault:sharedUserDefault():flush()
@@ -455,7 +454,7 @@ local function main ()
     if not CCUserDefault:sharedUserDefault():getBoolForKey("hasFile") then
       CCUserDefault:sharedUserDefault():setBoolForKey("hasFile", true)
       CCUserDefault:sharedUserDefault():setIntegerForKey("HighestScore", 0)
-      CCUserDefault:sharedUserDefault():setStringForKey("Username", nil)
+      CCUserDefault:sharedUserDefault():setStringForKey("Username", "")
       CCUserDefault:sharedUserDefault():flush()
       return false
     else
@@ -467,7 +466,7 @@ local function main ()
     if hasFile() then
       return CCUserDefault:sharedUserDefault():getStringForKey("Username")
     else
-      return nil
+      return ""
     end
   end
   function setUsername( name )
@@ -493,9 +492,10 @@ local function main ()
   -- CCSpriteFrameCache:addSpriteFramesWithFile("ui/my_shoot.plist")
 	local director = CCDirector:sharedDirector()
   -- local gameScene = GameScene()
-  clearFile()
+  -- clearFile()
+
   director:setDisplayStats(false)
-  if not getUsername() then
+  if #getUsername() == 0 then
     director:runWithScene(LoginScene())
   else
     director:runWithScene(WelcomeScene())
